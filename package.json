@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "_args": [
     [
       "react-native-background-job@git+https://github.com/akki-ng/react-native-background-job.git",
@@ -70,4 +71,24 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "version": "1.1.0"
+=======
+  "name": "react-native-background-job",
+  "version": "1.1.0",
+  "description": "Schedule background jobs in React Native that run your JavaScript when your app is in the background.",
+  "main": "index.js",
+	"repository": "https://github.com/vikeri/react-native-background-job",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "document": "documentation readme --readme-file README.md -s \"API\" -g"
+  },
+  "keywords": [
+    "react-native",
+		"background-job"
+  ],
+  "author": "Viktor Eriksson <viktor.eriksson2@gmail.com>",
+  "license": "MIT",
+  "peerDependencies": {
+    "react-native": "^0.36.0"
+  }
+>>>>>>> 668f89c6d97f238bbec1822db2cc2afbdadb5024
 }

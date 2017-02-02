@@ -265,7 +265,7 @@ public class BackgroundJobModule extends ReactContextBaseJavaModule implements L
     @Override
     public void onHostPause() {
         Log.d(LOG_TAG, "Pausing");
-        scheduleJobs();
+        // scheduleJobs();
     }
 
     @Override
