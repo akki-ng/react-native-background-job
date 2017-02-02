@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merger version="3"><dataSet config="main"><source path="/Users/akki/git/dev/NgSalesApp/node_modules/react-native-background-job/android/src/main/assets"/></dataSet><dataSet config="release"><source path="/Users/akki/git/dev/NgSalesApp/node_modules/react-native-background-job/android/src/release/assets"/></dataSet></merger>

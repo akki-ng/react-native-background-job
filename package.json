@@ -1,0 +1,73 @@
+{
+  "_args": [
+    [
+      "react-native-background-job@git+https://github.com/akki-ng/react-native-background-job.git",
+      "/Users/akki/git/dev/NgSalesApp"
+    ]
+  ],
+  "_from": "git+https://github.com/akki-ng/react-native-background-job.git",
+  "_id": "react-native-background-job@1.1.0",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/react-native-background-job",
+  "_phantomChildren": {},
+  "_requested": {
+    "hosted": {
+      "directUrl": "https://raw.githubusercontent.com/akki-ng/react-native-background-job/master/package.json",
+      "gitUrl": "git://github.com/akki-ng/react-native-background-job.git",
+      "httpsUrl": "git+https://github.com/akki-ng/react-native-background-job.git",
+      "shortcut": "github:akki-ng/react-native-background-job",
+      "ssh": "git@github.com:akki-ng/react-native-background-job.git",
+      "sshUrl": "git+ssh://git@github.com/akki-ng/react-native-background-job.git",
+      "type": "github"
+    },
+    "name": "react-native-background-job",
+    "raw": "react-native-background-job@git+https://github.com/akki-ng/react-native-background-job.git",
+    "rawSpec": "git+https://github.com/akki-ng/react-native-background-job.git",
+    "scope": null,
+    "spec": "git+https://github.com/akki-ng/react-native-background-job.git",
+    "type": "hosted"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "git+https://github.com/akki-ng/react-native-background-job.git#668f89c6d97f238bbec1822db2cc2afbdadb5024",
+  "_shasum": "a6d59f706de5c15fbc6754e65a2c62cb0eb6a4d5",
+  "_shrinkwrap": null,
+  "_spec": "react-native-background-job@git+https://github.com/akki-ng/react-native-background-job.git",
+  "_where": "/Users/akki/git/dev/NgSalesApp",
+  "author": {
+    "email": "viktor.eriksson2@gmail.com",
+    "name": "Viktor Eriksson"
+  },
+  "bugs": {
+    "url": "https://github.com/vikeri/react-native-background-job/issues"
+  },
+  "dependencies": {},
+  "description": "Schedule background jobs in React Native that run your JavaScript when your app is in the background.",
+  "devDependencies": {},
+  "gitHead": "668f89c6d97f238bbec1822db2cc2afbdadb5024",
+  "homepage": "https://github.com/vikeri/react-native-background-job#readme",
+  "keywords": [
+    "background-job",
+    "react-native"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "name": "react-native-background-job",
+  "optionalDependencies": {},
+  "peerDependencies": {
+    "react-native": "^0.36.0"
+  },
+  "readme": "# react-native-background-job [![npm version](https://badge.fury.io/js/react-native-background-job.svg)](https://badge.fury.io/js/react-native-background-job)\n\nSchedule background jobs that run your JavaScript when your app is in the background. \n\nThe jobs will run even if the app has been closed and, by default, also persists over restarts.\n\nThis library relies on React Native's [`HeadlessJS`](https://facebook.github.io/react-native/docs/headless-js-android.html) which is currently only supported on Android.\n\nOn the native side it uses [`JobScheduler`](https://developer.android.com/reference/android/app/job/JobScheduler.html) which means that the jobs can't be scheduled exactly and for Android 23+ they fire at most once per 15 minutes +-5 minutes. `JobSceduler` was used since it seemed to be the most battery efficient way of scheduling background tasks. I'm open to pull requests that implement more exact scheduling.\n\n## Requirements\n\n-   RN 0.36+\n-   Android API 21+\n\n## Supported platforms\n\n-   Android\n\nWant iOS? Go in and vote for Headless JS to be implemented for iOS: [Product pains](https://productpains.com/post/react-native/headless-js-for-ios)\n\n## Getting started\n\n`$ yarn add react-native-background-job`\n\nor\n\n`$ npm install react-native-background-job --save`\n\n### Mostly automatic installation\n\n`$ react-native link react-native-background-job`\n\n### Manual installation\n\n<!--\n#### iOS\n\n1. In XCode, in the project navigator, right click `Libraries` ➜ `Add Files to [your project's name]`\n2. Go to `node_modules` ➜ `react-native-background-job` and add `RNBackgroundJob.xcodeproj`\n3. In XCode, in the project navigator, select your project. Add `libRNBackgroundJob.a` to your project's `Build Phases` ➜ `Link Binary With Libraries`\n4. Run your project (`Cmd+R`)<\n\n-->\n\n#### Android\n\n1.  Open up `android/app/src/main/java/[...]/MainActivity.java`\n    -   Add `import com.pilloxa.backgroundjob.BackgroundJobPackage;` to the imports at the top of the file\n    -   Add `new BackgroundJobPackage()` to the list returned by the `getPackages()` method\n2.  Append the following lines to `android/settings.gradle`:\n\n\n            include ':react-native-background-job'\n            project(':react-native-background-job').projectDir = new File(rootProject.projectDir, \t'../node_modules/react-native-background-job/android')\n\n3.  Insert the following lines inside the dependencies block in `android/app/build.gradle` and bump the minSdkVersion to 21:\n\n\n              compile project(':react-native-background-job')\n\n## Usage\n\nThe jobs have to be registered each time React Native starts, this is done using the `register` function. Since HeadlessJS does not mount any components the `register` function must be run outside of any class definitions (see [example/index.android.js](https://github.com/vikeri/react-native-background-job/blob/8b8fdb2cb4bc0907eb16a54204c85c3b7a60dfa4/example/index.android.js#L20-L23))\n\nRegistering the job does not mean that the job is scheduled, it just informs React Native that this `job` function should be tied to this `jobKey`. The job is then scheduled using the `schedule` function. **The job will not fire while the app is in the foreground**. This is since the job is run on the only JavaScript thread and if running the job when app is in the foreground it would freeze the app.\n\nFor a full example check out [example/index.android.js](example/index.android.js)\n\n## API\n\n<!-- Generated by documentation.js. Update this documentation by updating the source code. -->\n\n### register\n\nRegisters jobs and the functions they should run. \n\nThis has to run on each initialization of React Native. Only doing this will not start running the job. It has to be scheduled by `schedule` to start running.\n\n**Parameters**\n\n-   `obj` **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** \n    -   `obj.jobKey` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** A unique key for the job\n    -   `obj.job` **[function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)** The JS-function that will be run\n\n**Examples**\n\n```javascript\nimport BackgroundJob from 'react-native-background-job';\n\nconst backgroundJob = {\n jobKey: \"myJob\",\n job: () => console.log(\"Running in background\")\n};\n\nBackgroundJob.register(backgroundJob);\n```\n\n### schedule\n\nSchedules a new job. \n\nThis only has to be run once while `register` has to be run on each initialization of React Native.\n\n**Parameters**\n\n-   `obj` **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** \n    -   `obj.jobKey` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** A unique key for the job\n    -   `obj.timeout` **[number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)** How long the JS job may run before being terminated by Android (in ms).\n    -   `obj.period` **[number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** The frequency to run the job with (in ms). This number is not exact, Android may modify it to save batteries. Note: For Android > N, the minimum is 900 0000 (15 min). (optional, default `900000`)\n    -   `obj.persist` **[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** If the job should persist over a device restart. (optional, default `true`)\n    -   `obj.warn` **[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** If a warning should be raised if overwriting a job that was already scheduled. (optional, default `true`)\n    -   `obj.networkType` **[number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Only run for specific network requirements, (not respected by pre Android N devices) [docs](https://developer.android.com/reference/android/app/job/JobInfo.html#NETWORK_TYPE_ANY) (optional, default `BackgroundJob.NETWORK_TYPE_NONE`)\n    -   `obj.requiresCharging` **[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Only run job when device is charging, (not respected by pre Android N devices) [docs](https://developer.android.com/reference/android/app/job/JobInfo.Builder.html#setRequiresCharging(boolean)) (optional, default `false`)\n    -   `obj.requiresDeviceIdle` **[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Only run job when the device is idle, (not respected by pre Android N devices) [docs](https://developer.android.com/reference/android/app/job/JobInfo.Builder.html#setRequiresDeviceIdle(boolean)) (optional, default `false`)\n\n**Examples**\n\n```javascript\nimport BackgroundJob from 'react-native-background-job';\n\nconst backgroundJob = {\n jobKey: \"myJob\",\n job: () => console.log(\"Running in background\")\n};\n\nBackgroundJob.register(backgroundJob);\n\nvar backgroundSchedule = {\n jobKey: \"myJob\",\n timeout: 5000\n}\n\nBackgroundJob.schedule(backgroundSchedule);\n```\n\n### getAll\n\nFetches all the currently scheduled jobs\n\n**Parameters**\n\n-   `obj` **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** \n    -   `obj.callback` **function ([Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array))** A list of all the scheduled jobs will be passed to the callback\n\n**Examples**\n\n```javascript\nimport BackgroundJob from 'react-native-background-job';\n\nBackgroundJob.getAll({callback: (jobs) => console.log(\"Jobs:\",jobs)});\n```\n\n### cancel\n\nCancel a specific job\n\n**Parameters**\n\n-   `obj` **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** \n    -   `obj.jobKey` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** The unique key for the job\n    -   `obj.warn` **[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** If one tries to cancel a job that has not been scheduled it will warn (optional, default `true`)\n\n**Examples**\n\n```javascript\nimport BackgroundJob from 'react-native-background-job';\n\nBackgroundJob.cancel({jobKey: 'myJob'});\n```\n\n### cancelAll\n\nCancels all the scheduled jobs\n\n**Examples**\n\n```javascript\nimport BackgroundJob from 'react-native-background-job';\n\nBackgroundJob.cancelAll();\n```\n\n### setGlobalWarnings\n\nSets the global warning level\n\n**Parameters**\n\n-   `warn` **[boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** \n\n**Examples**\n\n```javascript\nimport BackgroundJob from 'react-native-background-job';\n\nBackgroundJob.setGlobalWarnings(false);\n```\n\n## Debugging\n\nIf you are using Android API +25 you can manually trigger the jobs by using the following command in a terminal:\n\n```sh\n$ adb shell cmd jobscheduler run -f your.package jobIntId\n```\n\n`jobIntId`: is the hashed `jobKey`. Get that value by going to [Java REPL](http://www.javarepl.com/term.html) and input:\n\n```java\n\"yourJobKey\".hashCode();\n// 1298333557\n```\n\n## Troubleshooting\n\n### `AppState.currentState` is `\"active\"` when I'm running my Headless task in the background\n\nThis is a [React Native issue](https://github.com/facebook/react-native/issues/11561), you can get around it by calling `NativeModules.AppState.getCurrentAppState` directly instead.\n\n### My job always runs in the background even if i specified `requiresCharging`, `requiresDeviceIdle` or a specific `networkType`\n\nThis is an [Android issue](https://code.google.com/p/android/issues/detail?id=81265), it seems that you can not have these restrictions at the same time as you have a periodic interval for pre Android N devices.\n\n## Sponsored by\n\n[![pilloxa](http://pilloxa.com/images/pilloxa-round-logo.svg)](http://pilloxa.com)\n",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vikeri/react-native-background-job.git"
+  },
+  "scripts": {
+    "document": "documentation readme --readme-file README.md -s \"API\" -g",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "1.1.0"
+}
