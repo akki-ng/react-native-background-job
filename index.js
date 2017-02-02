@@ -184,6 +184,25 @@ const BackgroundJob = {
   },
 
 
+  startNow: function({
+                      taskId,
+                      jobKey,
+                      timeout = 0,
+                      payLoad = null
+                    }) {
+    console.log(taskId);
+    console.log(jobKey);
+    console.log(timeout);
+    console.log(payLoad);
+    jobModule.startNow(
+            taskId,
+            jobKey,
+            timeout,
+            payLoad
+          );
+  },
+
+
     /**
      * Fetches all the currently scheduled jobs
      *

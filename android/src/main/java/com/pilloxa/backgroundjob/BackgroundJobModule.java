@@ -11,6 +11,8 @@ import android.util.Log;
 import com.facebook.react.bridge.*;
 import com.facebook.react.bridge.Arguments;
 
+import android.content.Intent;
+
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
@@ -138,6 +140,22 @@ public class BackgroundJobModule extends ReactContextBaseJavaModule implements L
         Log.v(LOG_TAG, String.format("Scheduling One Time Job: %s, JobId: %s, timeout: %s, network type: %s, requiresCharging: %s, requiresDeviceIdle: %s", jobKey, taskId, timeout, networkType, requiresCharging, requiresDeviceIdle));
 
         return scheduleJob(taskId, jobKey, timeout, -1, persist, appActive, networkType, requiresCharging, requiresDeviceIdle, payLoad);
+    }
+
+    @ReactMethod
+    public void startNow(int taskId, String jobKey, int timeout, String payLoad) {
+        Log.v(LOG_TAG, String.format("Starting One Time Job: %s, JobId: %s, timeout: %s, payLoad: %s", jobKey, taskId, timeout, String.valueOf(payLoad)));
+        Intent service = new Intent(reactContext, HeadlessService.class);
+
+        Bundle bundle = new Bundle();
+
+        bundle.putString("jobKey", jobKey);
+        bundle.putInt("timeout", timeout);
+        bundle.putInt("taskId", taskId);
+        bundle.putString("payLoad", payLoad);
+
+        service.putExtras(bundle);
+        reactContext.startService(service);
     }
 
     @ReactMethod

@@ -13,8 +13,11 @@ import com.facebook.react.jstasks.HeadlessJsTaskConfig;
  */
 
 public class HeadlessService  extends HeadlessJsTaskService {
+    private String LOG_TAG = "backgroundjob";
+
     @Override
     protected HeadlessJsTaskConfig getTaskConfig(Intent intent) {
+        Log.d(LOG_TAG, "On Start of HeadlessService JOB");
         Bundle extras = intent.getExtras();
         String jobKey = extras.getString("jobKey");
         int timeout = extras.getInt("timeout");
