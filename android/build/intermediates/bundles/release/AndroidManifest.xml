@@ -19,6 +19,10 @@
         <service
             android:name="com.pilloxa.backgroundjob.HeadlessService"
             android:enabled="true" />
+        <service
+            android:name="com.pilloxa.backgroundjob.AsyncJob"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
     </application>
 
 </manifest>

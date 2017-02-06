@@ -15,7 +15,7 @@ import com.facebook.react.bridge.JavaScriptModule;
 public class BackgroundJobPackage implements ReactPackage {
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
-      return Arrays.<NativeModule>asList(new BackgroundJobModule(reactContext));
+      return Arrays.<NativeModule>asList(new BackgroundJobModule(reactContext), new AsyncJobModule(reactContext));
     }
 
     @Override

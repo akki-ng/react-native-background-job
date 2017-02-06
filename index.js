@@ -1,5 +1,8 @@
 "use strict";
 import { NativeModules, AppRegistry } from "react-native";
+import AbstractTask from './abstractTask'
+import TaskRegistry from './taskRegistry'
+import JobScheduler from './jobScheduler'
 
 const AppState = NativeModules.AppState;
 const tag = "BackgroundJob:";
@@ -318,4 +321,10 @@ const BackgroundJob = {
     globalWarning = warn;
   }
 };
-module.exports = BackgroundJob;
+
+export {
+  AbstractTask,
+  TaskRegistry,
+  JobScheduler,
+  BackgroundJob
+}
