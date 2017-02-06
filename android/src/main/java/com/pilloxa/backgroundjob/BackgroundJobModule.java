@@ -27,19 +27,19 @@ public class BackgroundJobModule extends ReactContextBaseJavaModule implements L
 
     private final ReactApplicationContext reactContext;
 
-    private List<JobInfo> mJobs;
-
     private JobScheduler jobScheduler;
 
     private boolean mInitialized = false;
+
+    private Object lock1 = new Object();
 
     @Override
     public void initialize() {
         Log.d(LOG_TAG, "Initializing BackgroundJob");
         if (jobScheduler == null) {
             jobScheduler = (JobScheduler) getReactApplicationContext().getSystemService(Context.JOB_SCHEDULER_SERVICE);
-            mJobs = jobScheduler.getAllPendingJobs();
             mInitialized = true;
+            // jobScheduler.cancelAll();
         }
         super.initialize();
         getReactApplicationContext().addLifecycleEventListener(this);
@@ -71,6 +71,7 @@ public class BackgroundJobModule extends ReactContextBaseJavaModule implements L
 
         jobExtras.putString("jobKey", jobKey);
         jobExtras.putInt("timeout", timeout);
+        jobExtras.putInt("taskId", taskId);
         jobExtras.putInt("persist", persistInt);
         jobExtras.putInt("networkType", networkType);
         jobExtras.putInt("requiresCharging", requiresCharging ? 1 : 0);
@@ -88,7 +89,7 @@ public class BackgroundJobModule extends ReactContextBaseJavaModule implements L
         return jobInfo.build();
     }
 
-    private int scheduleJob(int taskId, String jobKey,
+    private synchronized void scheduleJob(int taskId, String jobKey,
                          int timeout,
                          int period,
                          boolean persist,
@@ -96,24 +97,31 @@ public class BackgroundJobModule extends ReactContextBaseJavaModule implements L
                          int networkType,
                          boolean requiresCharging,
                          boolean requiresDeviceIdle,
-                         String payLoad) {
+                         String payLoad, Callback callback) {
         JobInfo newJob = this.createJobObject(taskId, jobKey, timeout, period, persist, networkType, requiresCharging, requiresDeviceIdle, payLoad);
-
-        for (JobInfo iJobInfo : mJobs) {
-            if (iJobInfo.getId() == taskId) {
-                mJobs.remove(iJobInfo);
+        Log.v(LOG_TAG, String.format("Create Job instance for JobId: %s", newJob.getId()));
+        /*
+        synchronized(lock1) {
+            for (JobInfo iJobInfo : mJobs) {
+                if (iJobInfo.getId() == taskId) {
+                    mJobs.remove(iJobInfo);
+                }
             }
+            Log.v(LOG_TAG, "will Add in array");
+            mJobs.add(newJob);
+            Log.v(LOG_TAG, "Successfully Added in array");
         }
-        mJobs.add(newJob);
+        */
 
-        if (!appActive) {
-            scheduleJobs();
+        if (true || !appActive) {
+            // scheduleJobs();
+            scheduleAJob(newJob, callback);
         }
-        return newJob.getId();
+        // return -1; //newJob.getId();
     }
 
     @ReactMethod
-    public int scheduleRepeatedJob(int taskId, String jobKey,
+    public void scheduleRepeatedJob(int taskId, String jobKey,
                          int timeout,
                          int period,
                          boolean persist,
@@ -121,25 +129,27 @@ public class BackgroundJobModule extends ReactContextBaseJavaModule implements L
                          int networkType,
                          boolean requiresCharging,
                          boolean requiresDeviceIdle,
-                         String payLoad) {
+                         String payLoad,
+                         Callback callback) {
 
-        Log.v(LOG_TAG, String.format("Scheduling Repeated Job: %s, JobId: %s, timeout: %s, period: %s, network type: %s, requiresCharging: %s, requiresDeviceIdle: %s", jobKey, taskId, timeout, period, networkType, requiresCharging, requiresDeviceIdle));
+        Log.v(LOG_TAG, String.format("Scheduling Repeated Job: %s, JobId: %s, timeout: %s, period: %s, network type: %s, requiresCharging: %s, requiresDeviceIdle: %s, payLoad: %s", jobKey, taskId, timeout, period, networkType, requiresCharging, requiresDeviceIdle, String.valueOf(payLoad)));
 
-       return scheduleJob(taskId, jobKey, timeout, period, persist, appActive, networkType, requiresCharging, requiresDeviceIdle, payLoad);
+        scheduleJob(taskId, jobKey, timeout, period, persist, appActive, networkType, requiresCharging, requiresDeviceIdle, payLoad, callback);
     }
 
     @ReactMethod
-    public int scheduleOneTimeJob(int taskId, String jobKey,
+    public void scheduleOneTimeJob(int taskId, String jobKey,
                          int timeout,
                          boolean persist,
                          boolean appActive,
                          int networkType,
                          boolean requiresCharging,
                          boolean requiresDeviceIdle,
-                         String payLoad) {
-        Log.v(LOG_TAG, String.format("Scheduling One Time Job: %s, JobId: %s, timeout: %s, network type: %s, requiresCharging: %s, requiresDeviceIdle: %s", jobKey, taskId, timeout, networkType, requiresCharging, requiresDeviceIdle));
+                         String payLoad,
+                         Callback callback) {
+        Log.v(LOG_TAG, String.format("Scheduling One Time Job: %s, JobId: %s, timeout: %s, network type: %s, requiresCharging: %s, requiresDeviceIdle: %s, payLoad: %s", jobKey, taskId, timeout, networkType, requiresCharging, requiresDeviceIdle, String.valueOf(payLoad)));
 
-        return scheduleJob(taskId, jobKey, timeout, -1, persist, appActive, networkType, requiresCharging, requiresDeviceIdle, payLoad);
+        scheduleJob(taskId, jobKey, timeout, -1, persist, appActive, networkType, requiresCharging, requiresDeviceIdle, payLoad, callback);
     }
 
     @ReactMethod
@@ -159,29 +169,32 @@ public class BackgroundJobModule extends ReactContextBaseJavaModule implements L
     }
 
     @ReactMethod
-    private boolean hardCancel(int taskId ) {
-        mJobs = jobScheduler.getAllPendingJobs();
+    public synchronized void hardCancel(int taskId, Callback callback ) {
+        List<JobInfo> mJobs = jobScheduler.getAllPendingJobs();
         //-1(TaskId not Found) , 0(TaskId found, jobKey doesnot match), 1(TaskId found, jobKey matched)
+        boolean result = false;
         for (JobInfo iJobInfo : mJobs) {
             if (iJobInfo.getId() == taskId) {
                 String storedJobKey = iJobInfo.getExtras().containsKey("jobKey") ? iJobInfo.getExtras().getString("jobKey") : null;
 
                 Log.d(LOG_TAG, "Hard Cancelling job: " + String.valueOf(storedJobKey) + " (" + taskId + ")");
                 jobScheduler.cancel(taskId);
-                mJobs = jobScheduler.getAllPendingJobs();
-                return true;
+                // mJobs = jobScheduler.getAllPendingJobs();
+                result = true;
             }
         }
         Log.d(LOG_TAG, "Cancelling job:Failure: " + taskId + " does not exist");
-        return false;
+
+        callback.invoke(result);
     }
 
     @ReactMethod
-    private boolean cancel(String jobKey, int taskId ) {
-        mJobs = jobScheduler.getAllPendingJobs();
+    public synchronized void cancel(String jobKey, int taskId, Callback callback ) {
+        List<JobInfo> mJobs = jobScheduler.getAllPendingJobs();
         //-1(TaskId not Found) , 0(TaskId found, jobKey doesnot match), 1(TaskId found, jobKey matched)
         int isValid = -1;
         JobInfo iJobInfo = null;
+        boolean result = false;
         for (JobInfo jobInfo : mJobs) {
             if (jobInfo.getId() == taskId) {
                 PersistableBundle extras = jobInfo.getExtras();
@@ -198,27 +211,26 @@ public class BackgroundJobModule extends ReactContextBaseJavaModule implements L
         if(isValid == 1) {
             Log.d(LOG_TAG, "Cancelling job: " + jobKey + " (" + taskId + ")");
             jobScheduler.cancel(taskId);
-            mJobs = jobScheduler.getAllPendingJobs();
-            return true;
+            result = true;
         }else if(isValid == 0){
             String storedJobKey = iJobInfo != null && iJobInfo.getExtras().containsKey("jobKey") ? iJobInfo.getExtras().getString("jobKey") : null;
             Log.d(LOG_TAG, "Cancelling job:Failure: " + taskId + " existes but JobKey(" + String.valueOf(storedJobKey) + ") doesnot match to provided jobkey(" + jobKey + ")");
         }else {
             Log.d(LOG_TAG, "Cancelling job:Failure: " + taskId + " does not exist");
         }
-        return false;
+        callback.invoke(result);
     }
 
     @ReactMethod
-    public void cancelAll() {
+    public synchronized void cancelAll() {
         Log.d(LOG_TAG, "Cancelling all jobs");
         jobScheduler.cancelAll();
-        mJobs = jobScheduler.getAllPendingJobs();
     }
 
     private WritableArray _getAll() {
         Log.d(LOG_TAG, "Getting all jobs");
         WritableArray jobs = Arguments.createArray();
+        List<JobInfo> mJobs = jobScheduler.getAllPendingJobs();
         if (mJobs != null) {
             for (JobInfo job : mJobs) {
                 Log.d(LOG_TAG, "Fetching job " + job.getId());
@@ -251,7 +263,7 @@ public class BackgroundJobModule extends ReactContextBaseJavaModule implements L
         Log.d(LOG_TAG, "Getting constants");
         jobScheduler = (JobScheduler) getReactApplicationContext().getSystemService(Context.JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
-            mJobs = jobScheduler.getAllPendingJobs();
+            // mJobs = jobScheduler.getAllPendingJobs();
             mInitialized = true;
         }
         HashMap<String, Object> constants = new HashMap<>();
@@ -265,12 +277,23 @@ public class BackgroundJobModule extends ReactContextBaseJavaModule implements L
     @Override
     public void onHostResume() {
         Log.d(LOG_TAG, "Woke up");
-        mJobs = jobScheduler.getAllPendingJobs();
-        jobScheduler.cancelAll();
+        // List<JobInfo> mJobs = jobScheduler.getAllPendingJobs();
+        // jobScheduler.cancelAll();
 
     }
 
+    private void scheduleAJob(JobInfo job, Callback callback) {
+        jobScheduler.cancel(job.getId());
+        int result = jobScheduler.schedule(job);
+        if (result == JobScheduler.RESULT_SUCCESS) {
+           callback.invoke(true);
+           return;
+        }
+        callback.invoke(false);
+    }
+
     private void scheduleJobs() {
+        List<JobInfo> mJobs = jobScheduler.getAllPendingJobs();
         for (JobInfo job : mJobs) {
             Log.d(LOG_TAG, "Sceduling job " + job.getId());
             jobScheduler.cancel(job.getId());
@@ -289,5 +312,6 @@ public class BackgroundJobModule extends ReactContextBaseJavaModule implements L
     @Override
     public void onHostDestroy() {
         Log.d(LOG_TAG, "Destroyed");
+        scheduleJobs();
     }
 }

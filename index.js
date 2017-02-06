@@ -36,8 +36,11 @@ const BackgroundJob = {
     const existingJob = registeredJobs[jobKey];
 
     if (!existingJob || !existingJob.registered) {
-      var fn = async () => {
-        job();
+      var fn = async (data) => {
+        console.warn(
+          `${tag} Trying to execute the job ${data.jobKey}{${data.taskId}}`
+        );
+        job(data);
       };
 
       AppRegistry.registerHeadlessTask(jobKey, () => fn);
@@ -92,7 +95,8 @@ const BackgroundJob = {
       networkType = this.NETWORK_TYPE_NONE,
       requiresCharging = false,
       requiresDeviceIdle = false,
-      payLoad = null
+      payLoad = null,
+      callback
     }
   ) {
     const registeredJob = registeredJobs[jobKey];
@@ -124,7 +128,8 @@ const BackgroundJob = {
             networkType,
             requiresCharging,
             requiresDeviceIdle,
-            payLoad
+            payLoad,
+            callback
           );
         },
         () => console.err(`${tag} Can't get Current App State`)
@@ -145,7 +150,8 @@ const BackgroundJob = {
       networkType = this.NETWORK_TYPE_NONE,
       requiresCharging = false,
       requiresDeviceIdle = false,
-      payLoad = null
+      payLoad = null,
+      callback
     }
   ) {
     const registeredJob = registeredJobs[jobKey];
@@ -166,16 +172,18 @@ const BackgroundJob = {
       AppState.getCurrentAppState(
         ({ app_state }) => {
           const appActive = app_state == "active";
-          jobModule.scheduleOneTimeJob(
+          jobModule.scheduleRepeatedJob(
             taskId,
             jobKey,
             timeout,
+            100,
             persist,
             !appActive,
             networkType,
             requiresCharging,
             requiresDeviceIdle,
-            payLoad
+            payLoad,
+            callback
           );
         },
         () => console.err(`${tag} Can't get Current App State`)
@@ -190,10 +198,6 @@ const BackgroundJob = {
                       timeout = 0,
                       payLoad = null
                     }) {
-    console.log(taskId);
-    console.log(jobKey);
-    console.log(timeout);
-    console.log(payLoad);
     jobModule.startNow(
             taskId,
             jobKey,
@@ -232,7 +236,7 @@ const BackgroundJob = {
      *
      * BackgroundJob.cancel({jobKey: 'myJob', taskId: 182});
      */
-  cancel: function({ jobKey, taskId, warn = true }) {
+  cancel: function({ jobKey, taskId, warn = true, callback }) {
 
     if (warn && globalWarning && !registeredJobs[jobKey]) {
       console.warn(
@@ -244,7 +248,7 @@ const BackgroundJob = {
         `${tag} Trying to cancel the job ${jobKey}{${taskId}} but it is not scheduled`
       );
     }
-    jobModule.cancel(jobKey, taskId);
+    jobModule.cancel(jobKey, taskId, callback);
     delete alreadyScheduled[taskId];
     // jobs[jobKey] ? jobs[jobKey].scheduled = false : null;
 
@@ -262,13 +266,13 @@ const BackgroundJob = {
      *
      * BackgroundJob.cancel({taskId: 182});
      */
-  hardCancel: function({ taskId, warn = true }) {
-    if (warn && globalWarning && !registeredJobs[jobKey]) {
+  hardCancel: function({ taskId, warn = true, callback }) {
+    if (warn && globalWarning) {
       console.warn(
-        `${tag} Trying to cancel the job ${jobKey} but it is not registered`
+        `${tag} Trying to cancel the job with taskId ${taskId}`
       );
     }
-    jobModule.hardCancel(taskId);
+    jobModule.hardCancel(taskId, callback);
     delete alreadyScheduled[taskId];
     // jobs[jobKey] ? jobs[jobKey].scheduled = false : null;
   },

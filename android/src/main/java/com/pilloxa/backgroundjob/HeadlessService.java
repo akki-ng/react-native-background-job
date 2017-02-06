@@ -21,6 +21,6 @@ public class HeadlessService  extends HeadlessJsTaskService {
         Bundle extras = intent.getExtras();
         String jobKey = extras.getString("jobKey");
         int timeout = extras.getInt("timeout");
-        return new HeadlessJsTaskConfig( jobKey, Arguments.fromBundle(extras), timeout);
+        return new HeadlessJsTaskConfig( jobKey, Arguments.fromBundle(extras), timeout, true);
     }
 }
